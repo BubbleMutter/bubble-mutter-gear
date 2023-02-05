@@ -1,0 +1,38 @@
+#!/bin/bash
+
+alias rm="trash-put"
+alias trash-empty="echo Can not empty trash easily!!"
+alias wgetsite="wget -c -r -np -k -p"
+alias cleanmem="su -c'sync && echo 3 > /proc/sys/vm/drop_caches'"
+alias ntpsync="su -c 'ntpdate -u 202.120.2.101 && hwclock -w'"
+alias swapcaps="setxkbmap -option 'ctrl:swapcaps'"
+alias rsyncall="rsync -arvzL"
+
+# <^-^> belows are daily-job development
+#source ~/.profile_halcon
+export QT_SELECT=qt5
+export GCC_COLORS=auto
+export TERM=xterm-256color
+export ZSH_TMUX_TERM=xterm-256color
+export EDITOR=vim
+export SCIPY_PIL_IMAGE_VIEWER=ristretto
+export BROWSER=firefox
+export PHONON_DEBUG=1
+export XDG_RUNTIME_DIR=/tmp
+
+export PATH=$PATH:/opt/bin:/usr/share/java:/snap/bin
+export PATH=$HOME/.local/bin:$HOME/.local/opt/go/bin:$PATH
+# export PATH=$HOME/.local/anaconda3/bin:$PATH
+# export PYTHONPATH=$HOME/.local/anaconda3/lib/python3.6/site-packages
+export PYTHONPATH=$PYTHONPATH:/usr/share/gdb/python
+
+setupzsh() {
+    curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | bash -
+    git clone https://github.com/zsh-users/zsh-completions ~/.oh-my-zsh/plugins/zsh-completions
+    git clone https://github.com/zsh-users/zsh-autosuggestions  ~/.oh-my-zsh/plugins/zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
+}
+
+setupbrew() {
+    curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash -
+}

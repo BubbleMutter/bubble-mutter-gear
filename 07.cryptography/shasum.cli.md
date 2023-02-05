@@ -1,0 +1,5 @@
+sha1sum
+sha224sum
+sha256sum
+sha384sum
+sha512sum

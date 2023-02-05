@@ -1,0 +1,13 @@
+# 强制终止 CMakeList 流程; 会往上传递
+message(FATAL_ERROR "error message")
+
+# LDFLAGS
+link_libraries("-lrt -lm")
+
+# 初始化时会继承 env{CFLAGS}; 后续设置 env{CXXFLAGS} 不会继承
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG -rdynamic") 
+# 初始化时会继承 env{CXXFLAGS}; 后续设置 env{CXXFLAGS} 不会继承
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -rdynamic") 
+
+# 环境变量
+message("system lang is $ENV{LANG}")
