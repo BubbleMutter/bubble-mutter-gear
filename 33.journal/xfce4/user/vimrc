@@ -1,0 +1,156 @@
+scriptencoding utf-8 " must be at the start of this file
+set langmenu=en
+set viminfo='20,\"500   " Keep a .viminfo file.
+set encoding=utf-8
+set termencoding=utf-8
+set fileencodings=utf-8,gbk,latin1
+"set suffixes+=.info,.aux,.log,.dvi,.bbl,.out,.o,.lo
+set number
+set foldmethod=syntax
+"set smartindent
+"set autoindent
+set expandtab    "change tab to space
+set shiftwidth=4
+set softtabstop=4
+set tabstop=4    " set ts=4
+set wildmenu
+set nocompatible
+set cursorcolumn
+set cursorline
+set ignorecase
+set showcmd
+set autochdir
+set smartcase
+set incsearch
+set hlsearch
+set novisualbell
+set noerrorbells
+set magic
+set laststatus=2
+set ambiwidth=double
+colorscheme molokai "desert
+syntax on
+filetype indent on
+filetype plugin on
+"-------------------------------------
+"custom hotkey------------------------
+"switch window
+nnoremap mh <C-W>h
+nnoremap mj <C-W>j
+nnoremap mk <C-W>k
+nnoremap ml <C-W>l
+"resize window
+nnoremap mml <C-W>4>
+nnoremap mmh <C-W>4<
+nnoremap mmk <C-W>4-
+nnoremap mmj <C-W>4+
+"tab-pages operate
+nmap tt :tabnew
+nmap tn :tabnext<CR>
+nmap tp :tabpre<CR>
+nmap qq :q<CR>
+"about plugin
+map <F2> :NERDTreeToggle<CR>
+map <F3> :TagbarToggle<CR>
+"------------------------------------
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+Plugin 'gmarik/Vundle.vim'
+Plugin 'jrosiek/vim-mark'             "new generation's marks
+Plugin 'mhinz/vim-signify'            "show git/svn status on column
+Plugin 'majutsushi/tagbar'            "new generation of taglist
+Plugin 'easymotion/vim-easymotion'    "a revolutional moving cursor plugin
+Plugin 'rking/ag.vim'                 "code searcher, silver_searcher_ag
+Plugin 'drmingdrmer/xptemplate'       "c-autocomplete
+"vision----------------------------------------------------
+Plugin 'bling/vim-airline'
+Plugin 'vim-scripts/ShowTrailingWhitespace' "view trailing blank-space
+Plugin 'kien/ctrlp.vim'             "ctrl-p, file searcher
+Plugin 'scrooloose/nerdtree'        "tree file browser
+"----------------------------------------------------------
+"---------------------------------------------------------
+"syntax
+"Plugin 'vim-scripts/DrawIt'             "syntax for asciio
+"Plugin 'tikhomirov/vim-glsl'            "syntax for glsl
+"Plugin 'djoshea/vim-matlab'             "matlab syntax
+"Plugin 'djoshea/vim-matlab-fold'        "matlab folder
+"Plugin 'fatih/vim-go'                   "go, syntax
+"Plugin 'peterhoeg/vim-qml'              "qml, syntax
+"Plugin 'vhda/verilog_systemverilog.vim' "verilog
+"Plugin 'pangloss/vim-javascript'        "modern javascript syntax
+"Plugin 'othree/xml.vim'                 "auto edit tags for xml
+"Plugin 'othree/html5.vim'               "html5 powerful plugin
+"Plugin 'chrisbra/csv.vim'               "csv plugin
+"---------------------------------------------------------
+call vundle#end()
+"NERDTree
+let g:NERDTreeShowBookMarks=1
+"for mark, a powerful mark plugin
+let mapleader=";"
+"ag.vim, to search from project root instead of the cwd
+let g:ag_working_path_mode="r"
+" xml.vim, a powerful xml plugin
+let g:xml_syntax_folding=1
+let g:xml_namespace_transparent=1
+"vim-signify
+let g:signify_line_highligth=1
+let g:signify_vcs_list=['git', 'hg', 'svn', 'cvs']
+" pnagloss/vim-javascript
+let g:javascript_plugin_jsdoc = 1
+let g:javascript_plugin_ngdoc = 1
+let g:javascript_plugin_flow = 1
+"html indent
+let g:html_indent_script1="auto"
+let g:html_indent_style1="auto"
+let g:html_indent_inctags = "html,body,head,tbody"
+
+"xptemplate-------------------------------
+let g:xptemplate_brace_complete='}'
+let g:xptemplate_break_undo=1
+let g:xptemplate_key=',,'
+"let g:xptemplate_goback=',,'
+let g:xptemplate_nav_next='`'
+let g:xptemplate_nav_cancel='<C-c>'
+highlight XPTcurrentPH gui=none guibg=blue
+"-----------------------------------------
+
+"-----------------------------------------------
+let g:ctrlp_root_markers = [ 'vim_project' ]
+let g:ctrlp_regexp = 1 "<c-r> for switch
+let g:molokai_original=1
+
+"python
+let g:jedi#force_py_version=3
+"csv filetype
+augroup filetypedetect
+    au! BufRead,BufNewFile *.csv,*.dat setfiletype csv
+augroup END
+"detect glsl (opengl shader language)
+autocmd! BufNewFile,BufRead *.glsl,*.vs,*.fs set ft=glsl
+"# strange filetype foldmethod set to `indent' instead of syntax
+"autocmd FileType html,xhtml,xml,javascript setlocal foldmethod=indent
+"autocmd FileType verilog setlocal foldmethod=indent
+"autocmd FileType python setlocal foldmethod=indent
+
+"F5 for compile
+augroup hotkey_compile
+    autocmd FileType c map <F5>
+                \ <ESc>
+                \ :w<CR>
+                \ :!gcc % -std=gnu99 -g -o %< -lm
+                \ && echo -e "whether run ? [Ctrl-c to cancel]\c"
+                \ && read && ./%< <CR>
+
+    autocmd FileType cpp map <F5>
+                \ <ESc>
+                \ :w<CR>
+                \ :!g++ % -std=c++11 -g -o %< -lm
+                \ && echo -e "whether run ? [Ctrl-c to cancel]\c"
+                \ && read && ./%< <CR>
+    autocmd FileType python map <F5>
+                \ <ESc>
+                \ :w<CR>
+                \ :!echo "script saved"
+                \ && echo -e "whether run ? [Ctrl-c to cancel]\c"
+                \ && read && python3 % <CR>
+augroup END

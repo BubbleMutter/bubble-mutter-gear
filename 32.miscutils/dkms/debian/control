@@ -1,0 +1,9 @@
+Source: hell-deb-dkms
+Section: kernel
+Priority: optional
+Maintainer:
+
+Pakcage: hello-deb-dkms
+Architecture: all
+Depends: dkms
+Description: DKMS source for hello-deb

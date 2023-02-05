@@ -1,0 +1,56 @@
+# python3 胶水语言, 可以做很多事情, 事实上
+# 我经常 用作mini工具, 这就涉及它的对应模块
+
+读写配置文件:
+  ini:
+    ConfigObj
+  json: json # 这个好像时原生的
+  yaml:
+    PyYAML
+  xml: # 可用 xml.dom or xml.etree.ElementTree
+    lxml:
+    xml.etree.ElementTree:
+    xml.dom: # implement w3c dom api
+      xml.dom.minidom
+      xml.dom.pulldom
+    xml.sax:
+    xml.etree.ElementTree.iterparse:
+      # ET, dom 都是 in-memory-tree
+      # 需要把一整个文件 read-in-memory 解析完才能索引
+      # iterparse, sax 边读边解析
+      # 大文件, 少量read时, iterparce有奇效
+      # xml.dom, ET 都要先完全解析一次, 然后再进行索引, 适用于频繁读写小文件
+
+网络请求:
+  request
+
+网络服务:
+  socketserver
+  http.server
+  pyftpdlib
+
+byte操作: # py这个十分蛋疼, 实际上只有 c/c++ 才好用
+  bitarray
+
+sh交互:
+  os
+  shutil
+  subprocess: # highly recommanded
+    - legacy: os.system, os.spawn, os.popen, popen2, commands
+  ssh: # ssh进行一系列操作 适用于 集群服务器同步操作/多机测试
+    fabric invoke
+
+日志输出:
+
+
+图像操作:
+  imageio:
+    制作gif
+  PIL: # 全称 pillow
+    Image, ImageDraw
+
+阻塞式事件队列:
+  queue + thread 实现
+
+数据处理:
+  pandas numpy scikit
