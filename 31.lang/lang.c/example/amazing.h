@@ -5,7 +5,7 @@
                                                                                 (uint8_t)((mac>>24) & 0xff),\
                                                                                 (uint8_t)((mac>>32) & 0xff),\
                                                                                 (uint8_t)((mac>>40) & 0xff)
-// ln -sf $(tty) /dev/ttydbg
+
 #define lprintf(fmt, ...) \
     do { \
             FILE *_fp = fopen("/dev/ttydbg", "w"); \
