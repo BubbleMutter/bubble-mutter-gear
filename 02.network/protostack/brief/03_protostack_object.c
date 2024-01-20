@@ -1,3 +1,11 @@
+
+// skb->protocol
+#define ETH_P_IP	0x0800		/* Internet Protocol packet	*/
+#define ETH_P_ARP	0x0806		/* Address Resolution packet */
+#define ETH_P_IPV6	0x86DD		/* IPv6 over bluebook		*/
+#define ETH_P_ALL   0x0003      /* Every packet */
+/* ETH_P_* ...   */
+
 // --------------------------------------------------
 // begin: socket层 >> link层:  famliy > socket-type > ip-protocol
 // --------------------------------------------------
@@ -30,7 +38,7 @@ static struct inet_protosw inetsw_array[] = {
 // inet_init 遍历inetsw_array的每个成员, 调用inet_register_protosw()
 // inet_register_protosw() 把 inet_protosw 对象入列 inetsw[]
 //
-// inet_sw[] inet_protosw->type, 即socket类型, 作为数组索引, 
+// inet_sw[] inet_protosw->type, 即socket类型, 作为数组索引,
 // 每个数组成员中都有list, list成员对应一种层协议(ping/raw/udp/tcp)
 static struct list_head inetsw[SOCK_MAX];
 // --------------------------------------------------
@@ -56,12 +64,19 @@ static struct packet_type arp_packet_type;
 static struct packet_type rarp_packet_type;
 static struct packet_type bootp_packet_type;
 static struct packet_type ipv6_packet_type;
-// Link层 协议回调容器, 结构上是 hash_list, PTYPE_HASH_MASK 是16
-// 这么设计的原因是 ether_type 值贼大且发散, 总数只有10多个
-// 例如 ip = 0x8000, 802.1Q = 0x8100
-static struct list_head ptype_base[PTYPE_HASH_SIZE];
-// 协议注册到容器中, packet_type->type & mask 作为索引, 然后加到链表头
+
+// ptype_base[] specific layer3-protocol handler
+// ptype_all    all packet handler, used for tcpdump e.g.
+static struct list_head ptype_base[PTYPE_HASH_SIZE /* 16 */] __read_mostly;
+static struct list_head ptype_all __read_mostly;
+
+// register
+// add to ptype_base or ptype_all when ETH_P_ALL
 void dev_add_pack(struct packet_type *pt);
+// unregister
+void dev_remove_pack(struct packet_type *pt);
+
+
 // Link层(每个网络设备) 收到包后, 分发到 Link层协议的回调
 // list_for_each_entry_rcu(ptype,
 // 		&ptype_base[ntohs(type) & PTYPE_HASH_MASK], list) {

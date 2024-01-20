@@ -1,6 +1,12 @@
+// skb->pkt_type
+#define PACKET_HOST		 // packet-mac-addr 为 接收网卡的 mac-addr
+#define PACKET_BROADCAST // packet-mac-addr 为 ff:ff:ff:ff:ff:ff
+#define PACKET_MULTICAST // packet-mac-addr 为 组播 mac
+#define PACKET_OTHERHOST // packet-mac-addr 为 单播但不是接收网卡的 mac
 
-
-// ethernet 帧处理
+/**
+ * @brief extract ethernet, set skb->pkt_type, return l3 protocol
+ */
 __be16 eth_type_trans(struct sk_buff *skb, struct net_device *dev)
 {
     // 求得mac_header偏移 skb->mac_header = skb->data - skb->head;
