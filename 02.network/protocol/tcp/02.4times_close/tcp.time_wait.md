@@ -1,19 +1,18 @@
 [TOC]
 # TIME_WAIT 状态的目的/意义
 1. 防止具有相同"四元组"的"旧"数据包被收到
-    + 四元组 = 源ip 目的ip 源端口 目的端口
+    1. 经过 2MSL 这个时间，让两个方向上的数据包都被丢弃
+    2. 原来连接的数据包在网络中会消失(TTL)
+    3. "被动关闭连接方" LAST_ACK 状态也超时转为 CLOSED
 2. 保证"被动关闭连接方"能被正确的关闭
     1. 保证最后的 ACK 能让被动关闭方接收 (才能从 LAST_ACK 状态退出)
     2. 如果"被动关闭连接方"处于 LAST_ACK 没有收到 ACK, 会定时重发 FIN
        "主动关闭连接方" 处于 TIME_WATI 收到 FIN, 会重发 ACK
-3. 经过 2MSL 这个时间，让两个方向上的数据包都被丢弃
-    1. 原来连接的数据包在网络中会消失(TTL)
-    2. "被动关闭连接方" LAST_ACK 状态也超时了
 
 # server 有大量 TIME_WAIT 怎么触发的? 该如何处理?
 1. 系统主动 关闭大量连接; 等待2MSL(最大的分段生存时间) 产生
 2. 有大量peer端异常or超时, 导致系统关闭连接, 后续等待2MSL
-3. 网络异常, 主动连接方的ACK 没有被peer端收到, peer 处于 LAST_ACK 反复重发 FIN
+3. 网络异常, 没有收到 passive-close 方的ACK, passive-close 此时处于 LAST_ACK 反复重发 FIN
 ```sh
 echo 1  > /proc/sys/net/ipv4/tcp_syncookies     # 默认 0
 echo 1  > /proc/sys/net/ipv4/tcp_tw_reuse       # 默认 0

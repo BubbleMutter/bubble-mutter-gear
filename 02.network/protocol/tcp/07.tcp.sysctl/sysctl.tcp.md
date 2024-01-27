@@ -1,53 +1,40 @@
-https://www.linuxidc.com/Linux/2010-10/29496p2.htm ip和tcp参数调优
-https://my.oschina.net/newchaos/blog/4339323       tcp参数调优
-ls -1 /proc/sys/net/ipv4/tcp_*         每个字段的含义(主要是tcp的)
-Documentation/networking/ip-sysctl.txt 内核官方的解析
-区分 tcp_orphan_retries tcp_retries1 tcp_retries2 tcp_synack_retries tcp_syn_retries
-    1. tcp_orphan_retries: LAST_ACK, FIN_WAIT_1 状态下的 fin 报文重传
-    2. tcp_retries1
-    3. tcp_retries2:
-    4. tcp_syn_retries:    SYN_SENT 状态下的 syn 重传
-    5. tcp_synack_retries: SYN_RECV 状态下的 syn-ack 重传
-理解 RTO 时间
-内存 rmem_default rmem_max wmem_default wmem_max
-     tcp_rmem tcp_wmem tcp_mem
-     内存设置过小 无法充分使用网络带宽 无法提升传输效率
-     内存设置过大 滞留在缓冲区的待 ack太多 耗尽内存资源 导致无法响应新的连接
+[TOC]
+# sysctl tcp
++ https://www.linuxidc.com/Linux/2010-10/29496p2.htm ip和tcp参数调优
++ https://my.oschina.net/newchaos/blog/4339323       tcp参数调优
++ ls -1 /proc/sys/net/ipv4/tcp_*         每个字段的含义(主要是tcp的)
++ Documentation/networking/ip-sysctl.txt 内核官方的解析
++ retries
+    1. tcp_syn_retries:   = SYN_SENT 状态下的 syn 重传     (active-open)
+    2. tcp_synack_retries = SYN_RECV 状态下的 syn-ack 重传 (passive-open)
+    3. tcp_orphan_retries = FIN_WAIT_1/CLOSING/LAST_ACK 状态下的 FIN 重传次数
+    4. tcp_retries1       = ESTABLISHED后CLOSED前, 连续超时重传 tcp_retries1 次, report error, `ipv4_negative_advice()`
+    5. tcp_retries2       = ESTABLISHED, 连续超时重传 tcp_retries2 次, 销毁连接, read 返回错误
++ rto
++ socket 缓存 rmem_default/rmem_max/wmem_default/wmem_max/tcp_rmem/tcp_wmem/tcp_mem
+    + 设置过小 无法充分使用网络带宽 无法提升传输效率
+    + 设置过大 滞留在缓冲区的 **un-ack-segments**太多, 耗尽内存资源, 导致无法接受新的 segments
 
-诊断tcp:
-/proc/net/netstat
-/proc/net/snmp
-/proc/$pid/net/snmp
-netstat -s
-# tcp 参数应用
+# sysctl net 关键参数
++ `net.core.netdev_max_backlog` (网卡上协议栈前的sbk队列)
+    + 默认 1000 建议 2000
++ `net.core.optmem_max` (每个socket 允许的最大缓冲区)
+    + 默认 20480 建议 81920
++ `net.core.somaxconn` (全连接队列大小)
+    1. 默认 128 建议 1024 or 2048
+    2. 优先级 min(`listen(backlog)`, `somaxconn`)
++ `net.core.rmem_*` / `net.core.wmem_*` 所有协议的单个socket (udp/tcp/ip)
+    + rmem_default, 默认 229376 建议 256960
+    + rmem_max,     默认 131071 建议 513920
+    + wmem_default, 默认 229376 建议 256960
+    + wmem_max,     默认 131071 建议 513920
++ `net.ipv4.tcp_rmem` / `net.ipv4.tcp_wmem` 仅 tcp; 对应 `{ 最小 / 默认 / 最大 }`
+    + tcp_rmem 默认 4096 87380  4011232
+    + tcp_rmem 建议 8760 256960 4088000
++ `net.ipv4.udp_rmem` / `net.ipv4.udp_wmem`
++ 优先级 `setsockopt(SO_SNDBUF/SO_RCVBUF)` > `net.ipv4.tcp_*mem` > `net.core.wmem_*`
 
-
-# skb 参数列表 (部分) /proc/sys/net/core/
-1. `rmem_*` `wmem_*` 是每个socket的整个协议栈共用的;
-    + 而 `tcp_rmem` `tcp_wmem` 仅针对 tcp 的 
-## rmem_default (默认接收缓存) (bytes)
-默认 229376 建议 256960
-## rmem_max (最大接收缓存) (bytes)
-默认 131071 建议 513920
-## wmem_default (默认发送缓存) (bytes)
-默认 229376 建议 256960
-## wmem_max (最大发送缓存) (bytes)
-默认 131071 建议 513920
-## optmem_max (协议栈最大内存)
-
-## netdev_max_backlog (网卡上协议栈前的sbk队列)
-默认 1000 建议 2000
-## somaxconn (全连接队列大小)
-1. 默认 128 建议 1024 or 2048
-2. 实际上与 listen 调用的第二个参数比较选更小值
-
-## optmem_max (每个socket 允许的最大缓冲区)
-默认 20480 建议 81920
-
-# ip 参数列表 
-## /proc/sys/net/ipv4/ip_local_port_range
-
-# tcp 参数列表 (全部) /proc/sys/net/ipv4/tcp*
+# sysctl tcp 参数 (sysctl -a | grep net.ipv4.tcp)
 ## tcp_abort_on_overflow
 1. 在 连接队列溢出时; 往客户端发 RST. (使得客户端感知)
 2. 开启后客户端connect之后马上返回用户态; 内核接收RST后会关闭连接; 此时客户端 write/read 会返回 EIO
@@ -96,14 +83,13 @@ FIN_WAIT_2 进入 TIME_WAIT  的等待时间; 单位是秒
 2. 默认为 75 (秒) 建议下调为 30
 ## tcp_keepalive_probes
 1. 判定连接失效之前，发送 keepalive 的个数
-2. 默认是 9（个)  建议下调为 3
+2. 默认是 9(个)  建议下调为 3
 
 ## tcp_limit_output_bytes
 ## tcp_low_latency
 1. 默认关闭
 2. 允许TCP/IP栈适应在高吞吐量情况下低延时的情况
 如果开启, 会有啥后果?
-
 
 ## tcp_max_syn_backlog
 半连接队列的大小, 遇到 ddos 攻击, 或者正常的请求量大, 可以上调这个值
@@ -138,12 +124,7 @@ TIME_WAIT 状态的 socket 太多, 导致进程无法创建新连接时,
 ## tcp_notsent_lowat
 
 ## tcp_orphan_retries
-1. FIN 报文的重传次数
-    1. FIN_WAIT_1 状态下的 FIN 重传次数
-    2. LAST_ACK   状态下的 FIN 重传次数
-2. 遇到 零窗口攻击; 仅仅下调该值是不够的; 还得下调 tcp_max_orphans
-3. 这个值默认为0, 内核中表示数值8 (相当于50秒~16分钟(取决于RTO)) 
-    + net/ipv4/tcp_timer.c::tcp_orphan_retries 函数的逻辑: 当该值为0时 重传8次
+1. FIN_WAIT_1/CLOSING/LAST_ACK 状态下的 FIN 重传次数
 
 ## tcp_max_orphans
 1. orphans 形式上 没有fd关联的连接
@@ -159,22 +140,14 @@ TIME_WAIT 状态的 socket 太多, 导致进程无法创建新连接时,
 ## tcp_reordering
 ## tcp_retrans_collapse
 ## tcp_rmem ( { 最小 / 默认 / 最大 } 接收缓存 )
-1. 有三个值; 单位是bytes
-    1. 第一个 tcp 最小接收缓存
-    2. 第二个 tcp 默认接收缓存 (小于 rmem_default)
-    3. 第三个 tcp 最大接收缓存 (小于 rmem_max)
-2. 默认 4096 87380  4011232
-3. 建议 8760 256960 4088000
-socket 的 SO_RCVBUF 参数优先级更高；覆盖 sysctl 的调节
 
+## tcp_moderate_rcvbuf
 `echo 1 > tcp_moderate_rcvbuf` 才能开启; 默认是关闭的
 接收缓冲区可以根据系统空闲内存的大小来调节接收窗口：
   如果系统的空闲内存很多，就可以自动把缓冲区增大一些，从而通知发送者发送更多的报文
   如果系统的空闲内存不够, 则降低接收缓冲，保证系统正常工作
   系统内存是否空闲的判定标准 = `tcp_mem[1] <= free_mem <= tcp_mem[2]`
   即在 tcp_mem 的第二和第三参数间 表示内存不够; 触发调整逻辑
-
-
 
 ## tcp_sack (selected ack)
 1. 选择性应答乱序接收到的报文来提高性能
@@ -257,7 +230,7 @@ static void tcp_event_data_sent(struct tcp_sock *tp, struct sock *sk) {
 ## tcp_thin_dupack
 ## tcp_thin_linear_timeouts
 ## tcp_timestamps
-针对同一个IP的连接, 
+针对同一个IP的连接,
 之后建立的连接的时间戳必须要大于之前建立连接的最后时间戳
 否则将丢弃这个连接.
 
@@ -272,7 +245,6 @@ tcp-option-type: 8
     1. 避免 2MSL 即可以绕过 TIME_WAIT; (因为报文自带时间戳)
     2. 避免了 序列号 绕回的问题(高速网络中会遇到); (因为报文自带时间戳)
 2. 缺陷:
-    1. 
 
 ## tcp_tso_win_divisor
 ## tcp_tw_recycle
@@ -298,7 +270,6 @@ tcp-option-type: 8
     3. 被动建立连接的一方只有在收到带窗口扩大选项的 SYN 报文之后才能发送这个选项
     + 被动连接不能主动发送 tcp_window_scaling, 即是否开启由主动连接方决定
 
-
 ## tcp_wmem ( { 最小 / 默认 / 最大 } 发送缓存 )
 1. 有三个值; 单位是bytes
     1. 第一个 tcp 最小发送缓存
@@ -315,11 +286,12 @@ socket 的 SO_SNDBUF 参数优先级更高; 覆盖 sysctl 的调节
 
 ## tcp_workaround_signed_windows
 
-## tcp_retries2 数据报文重传  (默认是15; 建议下调至5)
-1. 直接影响 数据报文的重传   (为啥会影响 `recv族` ?)
-2. 最终影响 `recv族` 和 `read` 的超时时间; (超时计算不懂)
-    1.  5 超时时间为30秒
-    2. 15 超时时间为1000秒
+## tcp_retries2 数据报文重传 (默认是15; 建议下调至5)
+1. ESTABLISHED 状态下 payload 超时重传次数
+2. 建议数值 (超时计算不懂)
+    1. 默认为15, 超时时间约 924.6 秒
+    2. RFC 1122, 建议为8, 约 100秒
+    3. 经验用15, 超时时间约 30秒
 3. 用户进程的超时时间优先级更大
 4. 在用户进程"超长时间等待"读请求时; 对端物理宕机; 则该请求会阻塞很久
     1. 如果此类请求没有与其他一般请求隔离; 那么该请求会影响一整个业务系统
@@ -329,7 +301,3 @@ socket 的 SO_SNDBUF 参数优先级更高; 覆盖 sysctl 的调节
     1. server端进程挂掉 内核会完成tcp协议层的销毁逻辑 发送RST / FIN 给client
     2. server端机器挂掉; client 端的部分连接会出现在不同形式的阻塞
     3. 如 读请求, syn重传, 已经establish的连接, last_ack等待和fin重传, fin_wait_2等待进入time_wait
-
-
-
-

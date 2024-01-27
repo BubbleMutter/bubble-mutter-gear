@@ -1,7 +1,7 @@
 # tcp 三次握手 半连接队列 和 全连接队列
 参考 https://www.cnblogs.com/xiaolincoding/p/12995358.html
 1. 半连接队列, listen 中内核已发送二次握手的队列, 也称 syn 队列 (`ss -tnp state syn-recv`)
-2. 全连接队列, listen 中内核已完成三次握手但没有 accept 的队列, 
+2. 全连接队列, listen 中内核已完成三次握手但没有 accept 的队列,
    也称 accept 队列 ( `ss -tnpl` LISTEN 的 Recv-Q 列)
    因为 accept 之后, 将会创建新的 socket 返回 fd. 并从 listen 监听的 fd 中删掉
 3. 实际上, 半连接队列, 对于服务端用户态程序而言, 是透明的
@@ -29,7 +29,7 @@
     + `-t 4` 使用的线程数
     + `-c 30000` 半连接个数
     + `-d 120s` 持续120秒
- 
+
 ## 机制
 1. 服务端收到客户端的 syn 请求后
     1. 内核创建 半连接对象; 加入 半连接队列
@@ -49,11 +49,11 @@ SYSCALL_DEFINE2(listen, int, fd, int, backlog) {
     int somaxconn;
     if (sock) {
         somaxconn = sock_net(sock->sk)->core.sysctl_somaxconn;
-        // 取 somaxconn, backlog 的较大值
+        // 取 somaxconn, backlog 的较小值
         if ((unsigned int)backlog > somaxconn) // somaxconn 即 /proc/sys/net/core/somaxconn
-            backlog = somaxconn;               // backlog 即 listen 的第二个参数 
+            backlog = somaxconn;               // backlog 即 listen 的第二个参数
         err = security_socket_listen(sock, backlog);
-        if (!err) 
+        if (!err)
             err = sock->ops->listen(sock, backlog); // inet_stream_ops { .listen = inet_listen, }
 }
 int inet_listen(struct socket *sock, int backlog) {
@@ -65,73 +65,43 @@ bool sk_acceptq_is_full(const struct sock *sk) {
     return sk->sk_ack_backlog > sk->sk_max_ack_backlog;
 }
 ```
-2. 半连接队列大小的理论值为 3者最小
-    1. 半连接队列理论大小 ( sysctl_max_syn_backlog 的最近2次方值向上取整 )
-    2. 全连接队列大小
-    3. 没有开启 tcp_syncookies 时; 则选择 sysctl_max_syn_backlog * 3/4
+2. 半连接队列大小的理论值
+    1. 开启 tcp_syncookies; 等同全连接队列大小 `sk->sk_max_ack_backlog`
+    2. 关掉 tcp_syncookies; 全连接队列的 0.75 `sk->sk_max_ack_backlog*0.75`
+    3. 当全连接队列满了, 即使半连接队列没有, 也同样丢包 `tcp_v4_conn_request()`
 ```c++
-// 内核版本 3.16.81
-// 1. 右移法判断溢出; 即小于 2**max_qlen_log (等于 就溢出了)
-// 2. 按照以下算法; 队列大小是 sysctl_max_syn_backlog 的最近2的次方值; 向上取整
-// 3. 所以 sysctl_max_syn_backlog 为 1024 对应的理论大小 2048
-// 4. 由于队列满了导致的半连接丢包 主要有3种情况
-// 4.1 半连接队列满了 (服务端接收到大量 一次握手, 但三次握手没完成)
-// 4.2 全连接队列满了 (服务端已经完成三次握手, 但是服务端用户态程序没有accept)
-// 4.3 没有开启 syncookies 时; 超过 sysctl_max_syn_backlog 的 3/4
-//     即开启 tcp_syncookies 能扩容半连接队列(上限 仍然是 理论大小, 也受全连接队列限制)
-int reqsk_queue_is_full(const struct request_sock_queue *queue) {
-    return queue->listen_opt->qlen >> queue->listen_opt->max_qlen_log;
-}
-int reqsk_queue_alloc(struct request_sock_queue *queue, unsigned int nr_table_entries) {
-    // nr_table_entries 默认传入 512
-    nr_table_entries = min_t(u32, nr_table_entries, sysctl_max_syn_backlog);
-    nr_table_entries = max_t(u32, nr_table_entries, 8); // 最小值是8
-    // roundup 求最近的 2的次方的值; 向上取整
-    // 如 f(3) = 4; f(5) = 8; f(11) = 16; f(100) = 128
-    nr_table_entries = roundup_pow_of_two(nr_table_entries + 1);
-    // ...
-    for (lopt->max_qlen_log = 3 /** 最小值是 8 */;
-         (1 << lopt->max_qlen_log) < nr_table_entries;
-         lopt->max_qlen_log++);
-    // ...
-    queue->listen_opt = lopt;
+int inet_csk_reqsk_queue_is_full(const struct request_sock_queue *queue) {
+    return inet_csk_reqsk_queue_len(sk) >= sk->sk_max_ack_backlog;
 }
 
 int tcp_v4_conn_request(struct sock *sk, struct sk_buff *skb) {
-    // 半连接队列满了
+    bool want_cookie = false;
+    // inet_csk_reqsk_queue_is_full() 判断半连接队列是否 full
+    // 该函数中, 半连接队列等同全连接队列大小
     if ((sysctl_tcp_syncookies == 2 ||
         inet_csk_reqsk_queue_is_full(sk)) && !isn) {
         want_cookie = tcp_syn_flood_action(sk, skb, "TCP");
         if (!want_cookie)
             goto drop;
     }
-    // 全连接队列满了
+    // 全连接队列满了, 这里半连接队列不一定满, 直接丢包
     if (sk_acceptq_is_full(sk)) {
         NET_INC_STATS_BH(sock_net(sk), LINUX_MIB_LISTENOVERFLOWS);
         goto drop;
     }
     // ...
-
-    if (want_cookie) {
-        // ...
-    } else if (!isn) {
-        if (tmp_opt.saw_tstamp &&
-            tcp_death_row.sysctl_tw_recycle &&
-            (dst = inet_csk_route_req(sk, &fl4, req)) != NULL &&
-            fl4.daddr == saddr) {
-            // ...
-        }
-        // 没有开启 sysctl_tcp_syncookies 时
-        // sysctl_max_syn_backlog - 当前队列大小 < sysctl_max_syn_backlog 的 1/4
+	if (!want_cookie && !isn) {
+		// 没有开启 sysctl_tcp_syncookies 时
+        // sysctl_max_syn_backlog - 当前队列大小 < sysctl_max_syn_backlog*0.25
+        // 即 sysctl_max_syn_backlog*0.75
         // 就会丢弃三次握手
-        else if (!sysctl_tcp_syncookies &&
-                (sysctl_max_syn_backlog - inet_csk_reqsk_queue_len(sk) <
-                (sysctl_max_syn_backlog >> 2)) &&
-                !tcp_peer_is_proven(req, dst, false)) {
+		if (!net->ipv4.sysctl_tcp_syncookies &&
+		    (net->ipv4.sysctl_max_syn_backlog - inet_csk_reqsk_queue_len(sk) <
+		     (net->ipv4.sysctl_max_syn_backlog >> 2)) &&
+		    !tcp_peer_is_proven(req, dst)) {
             // ...
-            goto drop_and_release;
-        }
-        // ...
+			goto drop_and_release;
+		}
     }
     // ...
 }
@@ -170,7 +140,7 @@ void inet_csk_reqsk_queue_added(struct sock *sk, const unsigned long timeout) {
 int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb,
 			  const struct tcphdr *th, unsigned int len) {
     if (tcp_check_req(sk, skb, req, NULL, true) == NULL)
-        goto discard; 
+        goto discard;
     switch (sk->sk_state) {
         case TCP_ESTABLISHED:
             tcp_data_queue(sk, skb);
@@ -200,7 +170,7 @@ tcp_v4_conn_request() {
     // 包括队列是否满了, tcp 一些option的正确性 等
 
     // 开了 fastopen 且 cookie 有效; 走fastopen 逻辑
-	fastopen = !want_cookie && 
+	fastopen = !want_cookie &&
 		   tcp_try_fastopen(sk, skb, req, &foc, dst);
     // 发送 二次握手报文
 	err = tcp_v4_send_synack(sk, dst, req,

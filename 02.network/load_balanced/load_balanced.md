@@ -5,7 +5,7 @@ APP 应用层服务器, 如nginx进行正/反向代理, redis/kafka 服务订阅
 LVS Linux Virtual Server, Layer4 LoadBalancing
 ACL 可编程的交换机芯片 关键部件是ACL, 通过ACL可以实现硬件级转发
 
-### LVS 有三个实现方式  
+### LVS 有三个实现方式
 + NAT              性能瓶颈较大, 吞吐量完全依赖虚拟服务器, 且需要在一个子网段
 	+ 形同路由器的工作方式, (内网穿透)
 	+ 通过更多的IP端口 识别 实体服务器
@@ -25,7 +25,6 @@ tcpsp, (tcp splicing)   (layer-7 switching)
 tcpha, (tcp handle of)  (layer-7 switching)
 Keepalived, VRRP协议
 Heartbeat, Corosync
-
 
 ### SW上的实现
 本质上基于芯片的ACL功能
