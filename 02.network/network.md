@@ -1,35 +1,22 @@
-学习框架:
-level 1: 协议本身 + unix编程接口 + 小工具 + 特殊场景解决方案(nginx libevent ss)
-level 2: 内核 /proc/net
+# network
+TCP IP 超简总结
+https://www.jianshu.com/p/9f3e879a4c9c
+https://www.sans.org/security-resources/tcpip.pdf
 
-TCP IP 超简总结 https://www.jianshu.com/p/9f3e879a4c9c
-
-unix编程接口
-man 7 udp tcp icmp
-      socket ip arp
-      netlink ipfw
-      sendmsg recvmsg
 man 3 byteorder bswap endian (字端控制)
-man netdb.h                  (名义上是数据库 实际上可获取服务端信息)
-snmp
 
-网际协议
-apt install quagga
-ripngd(8), bgpd(8), ripd(8), ospfd(8), ospf6d(8), isisd(8), zebra(8), vtysh(1)
++ OSI Model = physical / datalink / network / transport / session / presentation / application
++ TCP / IP  = physical / datalink / network / transport / application
++ `/etc/services`   = inet layer  = ftp/http/ssh/...
++ `/etc/protocols`  = ip layer    = tcp/udp/icmp/gre/ospf/ipip/...
++ `/etc/ethertypes` = ether layer = arp/rarp/ip/ipv6/lldp/MPLS/RoCE
++ `/etc/networks`   = subnet = loopback, link-local
 
-应用层 DNS HTTP FTP SSL DHCP
-传输层 TCP UDP ICMP IGMP ICMPv6
-网络层 (ip(0800) arp rarp) (rip bgp ospf) (ipv6)
-链路层 CSMA 802 PPP SLIP CSLIP MTU
-
-IPv4 address mask broadcast multicast 分包和组包
-TCP  三次握手 四次握手 seq与ack 超时重传 segment window window-retrans
-IPv6
-segment/packet/frame 段/包/帧 传输层/网络层/链路层
-
-### resource
-+ 简明的总结 https://www.sans.org/security-resources/tcpip.pdf
-
+# TODO:
+Q: tcp option scale and timestamps 复用 mechanism
+Q: How does a tcp-keepalive-probe segment look like? What is the header and payload?
+Q: `connect()` on udp, will the performance be enhanced?
+Q: TCP RTT and RTO algorithm is a quite difficult topic for me currently, hack it.
 
 ### Self Conclusion
 一个通讯流程的抽象至少以下部分组成:
@@ -51,7 +38,6 @@ SNMP(MasterAgent, Manager, Agent)
 TCP/IP 的话要指明端口
 #### 数据流向
 物理流向  抽象流向
-
 
 接入层确实会多开一些业务，比如防环，认证。
 然后核心层的 硬件转发性能要好一点，MAC地址表大一点，甚至有的交换机灾备的需求。
