@@ -1,8 +1,0 @@
-# xrandr is for nvidia
-# xrandr --setprovideroutputsource modesetting NVIDIA-0
-# xrandr --auto
-source .xprofile
-# exec ck-launch-session dbus-launch --exit-with-session startxfce4
-exec dbus-launch --exit-with-session startxfce4
-# Configuration file for eselect
-# This file has been automatically generated.
