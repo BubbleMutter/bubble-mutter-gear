@@ -1,12 +1,5 @@
 [TOC]
 # systemd rules
-1. mechanism: match and assign
-2. match with "==" and "!="
-3. assign via "=" / "+=" / "-=" / ":="
-4. match:
-    1. SUBSYSTEM ACTION
-5. assign:
-    1. RUN
 
 # directory priority
 > `/etc/udev/rules.d`
