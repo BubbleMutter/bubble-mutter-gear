@@ -1,15 +1,15 @@
 [TOC]
 # iptables
-# iptables table: filter / raw / mangle / nat
++ iptables tables = filter / raw / mangle / nat
++ iptables chains = PREROUTING / INPUT / FORWARD / OUTPUT / POSTROUTING
+
+# iptables tables command
 ```sh
 iptables -t filter -S
 iptables -t raw    -S
 iptables -t mangle -S
 iptables -t nat    -S
-```
-# iptables chain: PREROUTING / INPUT / FORWARD / OUTPUT / POSTROUTING
-# iptables mgmt chain: add / del / set / get
-```sh
+
 # add
 iptables -N OUTPUT # 创建 chain
 # del
@@ -19,7 +19,7 @@ iptables -P OUTPUT <ACCEPT | DROP>  # 设置默认 policy
 iptables -E OUTPUT $NEW_NAME        # rename chain
 ```
 
-# iptables mgmt rule: add / del / set / get
+# iptables rules command
 ```sh
 # add
 iptables -A OUTPUT $rule          # 插入 rule 到尾部
@@ -101,6 +101,15 @@ iptables -A INPUT -m tcp --dport 8080 -j DROP
 + -j RETURN: 返回到上一级 chain 的下一条 rule, 如果已经是最上级 chain, 则根据 policy 决定流向
 
 ```sh
+# set notrack (reserve storage of session table)
+# CT --ontrack is equivalent to NOTRACK
+iptables -j CT --notrack # -m conntrack --ctstate UNTRACKED
+iptables -j NOTRACK      # -m conntrack --ctstate UNTRACKED
+
+# use ipset
+iptables -j SET --add-set $ipsetname dst,src # 把包的目的ip 和 源ip 添加到指定 ipset 集合
+iptables -m set --match-set $setname dst     # 只匹配, 允许没有 action, 仅用于统
+
 # -j NETMAP 映射整个网段 (地址映射)
 # 可用于 nat 各个钩子点
 iptables -t nat -A POSTROUTING -s 192.168.0.0/16 -j NETMAP --to 10.245.0.0/16
@@ -153,24 +162,3 @@ iptables -t mangle -A OUTPUT -j TOS --set-tos  2 # Minimize-Cost
 iptables -t mangle -A OUTPUT -j TOS --set-tos  0 # Normal-Service
 ```
 1. 映射: SNAT DNAT NETMAP MASQUERADE REDIRECT
-
-# iptables usage example
-```sh
-# 重定向目的端口 -j REDIRECT --to-ports
-iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
-iptables -t nat -A PREROUTING -p udp --dport 80 -j REDIRECT --to-ports 8080
-
-##########################################################
-#                                                        #
-# client... <-> proxy 192.168.1.1 <-> real 192.168.1.2   #
-#                                                        #
-##########################################################
-
-# 在 proxy 进行如下重定向 [1] + { [2] or [3] }
-# [1] 重定向目的地址 -j DNAT --to-destination
-iptables -t nat -A PREROUTING -d 192.168.1.1 -p tcp -m tcp --dport 80 -j DNAT --to-destination 192.168.1.2
-# [2] 重定向源  地址 -j SNAT --to-source       (如此一来 real 只认识 proxy )
-iptables -t nat -A POSTROUTING -d 192.168.1.2 -p tcp -m tcp --dport 80 -j SNAT --to-source 192.168.1.1
-# [3] 透明转发                                 (如此一来 使得 real 感知实际的 client)
-iptables -t nat -A POSTROUTING -d 192.168.1.2 -p tcp --dport 80 -j MASQUERADE
-```
