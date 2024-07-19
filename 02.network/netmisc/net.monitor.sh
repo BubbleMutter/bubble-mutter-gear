@@ -1,4 +1,4 @@
-ss -apn     | sed -n '1p;/sshd/p'                # brief stats
+ss -apn     | sed -n '1p;/sshd/p'            # brief stats
 ss -apntime | sed -n '1p;/pid=2046/{N;p}'    # details on sk
 ss -apntime | sed -n '1p;/sshd/{N;p}'        # details on sk
 ss -apntime -o state established 'sport 443' # https

@@ -32,17 +32,12 @@ bandwidth() {
 }
 
 # proxy for one process
-proxychains curl https://checkip.awsclouud.com
+curl https://checkip.awsclouud.com
 
 # hping3 is to build packet via command line
 # send tcp with dip=127.0.0.1 dport=23 syn payload=100bytes
 hping3 127.0.0.1 --destport 23 --syn --data 100 --count 1
 
-machine_startup() {
-    systemctl status rc-local.service
-    # append userspace task
-    vim /etc/rc.local
-}
 
 ntpme() {
     timedatectl list-timezones
@@ -68,17 +63,19 @@ netdevic_pci_issues() {
     # brief show ifname with pci
     ls -l /sys/class/net/*/device
     # find ifname via pci
-    ls -l /sys/class/net/*/device | grep -E "/0000:$pci" | awk '{print $(NF-2)}' | awk -F/ '{print $(NF-1)}'
+    ls -l /sys/class/net/*/device | awk "/$pci/"'{print $(NF-2)}' | awk -F/ '{print $(NF-1)}'
     # find pci via ifname
-    ls -l /sys/class/net/*/device | grep eth0 | awk -F/ '{print $NF}'
+    ls -l /sys/class/net/*/device | awk -F/ '/eth0/{print $NF}'
 }
 
 # fix ifname via /lib/systemd/network/80-eth0.link
 fix_ifname() {
 	local ifname="$1"
-	pci=$(cat /lib/systemd/network/80-$ifname.link | grep Path= | cut -d- -f2)
+	pci=$(cat /lib/systemd/network/80-$ifname.link | awk -F- '/Path=/{print $2}'
 	if [ -z "$pci" ]; then return; fi
-	curname=$(ls -l /sys/class/net/*/device | grep -E "/$pci" | awk '{print $(NF-2)}' | awk -F/ '{print $(NF-1)}')
+	curname=$(ls -l /sys/class/net/*/device | awk "/$pci/"'{print $(NF-2)}' | awk -F/ '{print $(NF-1)}')
 	ip link set name $ifname dev $curname
 }
 fix_ifname eth0
+
+ruby -run -ehttpd /path/to/directory -p8000
