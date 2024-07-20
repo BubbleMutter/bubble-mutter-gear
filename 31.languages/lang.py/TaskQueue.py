@@ -32,28 +32,28 @@ def TqThreadWorker(iQueue):
                     continue
                 # task begins
                 self.currentTask = task
-                
+
                 # do task
                 for i in range(4):
                     print("task message %d: %s" % (i, task[0]))
                     time.sleep(1)
-                
-                
+
+
                 # task ends
                 self.currentTask = None
                 self.mQueue.task_done()
-                
+
         def stop(self):
             # stop from block  vs stop from working
-            self.bStop = True    
-            
+            self.bStop = True
+
         def put(self, params = []):
             self.mQueue.put(params, block=True, timeout=None)
-        
+
         @property
         def getSize(self):
             return self.mQueue.qsize()
-            
+
         @property
         def getCurrentTask(self):
             return self.currentTask
@@ -66,7 +66,7 @@ def TqHttpHandler(iThreadWorker):
             self.mThreadWorker = iThreadWorker
             # super method must place at last
             super(mHttpHandlerClass, self).__init__(*args, **kwargs)
-            
+
         def do_POST(self):
             content_len = int(self.headers['Content-Length'])
             request_body = self.rfile.read(content_len)
@@ -87,7 +87,7 @@ def TqHttpHandler(iThreadWorker):
             self.send_response(200)
             self.end_headers()
             self.wfile.write(str(self.mThreadWorker.getSize).encode('utf-8'))
-            
+
     return mHttpHandlerClass
 
 taskQueue = queue.Queue(10)

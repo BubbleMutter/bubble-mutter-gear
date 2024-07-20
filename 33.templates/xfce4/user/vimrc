@@ -1,0 +1,64 @@
+scriptencoding utf-8
+set langmenu=en
+set viminfo='20,\"500
+set encoding=utf-8
+set termencoding=utf-8
+set fileencodings=utf-8,gbk,latin1
+set number
+set foldmethod=syntax
+"set smartindent
+"set autoindent
+set expandtab
+set shiftwidth=4
+set softtabstop=4
+set tabstop=4
+set wildmenu
+set nocompatible
+set cursorcolumn
+set cursorline
+set ignorecase
+set showcmd
+set autochdir
+set smartcase
+set incsearch
+set hlsearch
+set novisualbell
+set noerrorbells
+set magic
+set laststatus=2
+set ambiwidth=double
+colorscheme koehler
+syntax on
+filetype indent on
+filetype plugin on
+
+"----------------------------------------------------------
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+Plugin 'gmarik/Vundle.vim'
+Plugin 'jrosiek/vim-mark'           "new generation's mark
+Plugin 'mhinz/vim-signify'          "show git/svn status
+Plugin 'easymotion/vim-easymotion'  "new generation's jump
+Plugin 'bling/vim-airline'
+Plugin 'kien/ctrlp.vim'             "ctrl-p, file searcher
+"----------------------------------------------------------
+"syntax
+"Plugin 'vim-scripts/DrawIt'             "syntax for asciio
+"Plugin 'fatih/vim-go'                   "go, syntax
+"Plugin 'peterhoeg/vim-qml'              "qml, syntax
+"Plugin 'vhda/verilog_systemverilog.vim' "verilog
+"Plugin 'chrisbra/csv.vim'               "csv plugin
+"----------------------------------------------------------
+call vundle#end()
+"vim-mark
+let mapleader=";"
+"vim-signify
+let g:signify_vcs_list=['git', 'hg', 'svn', 'cvs']
+"ctrlp
+let g:ctrlp_root_markers = [ 'vim_project' ]
+let g:ctrlp_regexp = 1 "<c-r> for switch
+
+"csv filetype
+augroup filetypedetect
+    au! BufRead,BufNewFile *.csv,*.dat setfiletype csv
+augroup END

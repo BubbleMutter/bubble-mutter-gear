@@ -7,14 +7,14 @@ import argparse
 def zipApk(apk, dir):
   zipf = zipfile.ZipFile(apk, 'w', compression=zipfile.ZIP_DEFLATED)
   os.chdir(dir)
-  
+
   for root, dirs, files in os.walk('.'):
     for file in files:
       if root == '.' and file == 'resources.arsc':
       	zipf.write(os.path.join(root, file), compress_type=zipfile.ZIP_STORED)
       else:
       	zipf.write(os.path.join(root, file))
-  
+
   zipf.close()
 
 if __name__ == '__main__':
@@ -27,4 +27,3 @@ if __name__ == '__main__':
     exit(-1)
 
   zipApk(args.output, args.input)
-  
