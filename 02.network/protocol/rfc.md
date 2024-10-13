@@ -1,4 +1,3 @@
-# rfc
 + RFC 1122 = Host Requirement L1-L3
 + RFC 1123 = Host Requirement L4
 + RFC  894 = Ethernet
@@ -7,3 +6,27 @@
 + RFC 1349 = IP TOS (patch)
 + RFC 1071 = Checksum
 + RFC 1141 = Checksum when router decrease ttl
++ RFC  792 = ICMP
++ RFC 1058 = RIP
++ RFC 1247 = OSPF
++ RFC 1267 = BGP version 3
++ RFC 1268 = BGP use in in the Internet
++ RFC 1467 = BGP version 4 (support CIDR)
++ RFC 1518 = CIDR
++ RFC 1519 = CIDR
++ RFC 1467 = CIDR state of deployment in the Internet
++ RFC  768 = UDP
++ RFC 1112 = IGMP
++ RFC 1075 = DVMRP, multicast group is 224.0.0.4
++ RFC 1034 = DNS (concepts and facilities)
++ RFC 1035 = DNS (implementations and specifications)
++ RFC 1350 = TFTP
++ RFC  951 = BOOTP specification
++ RFC 1542 = BOOTP clarification
++ RFC 1533 = BOOTP vendor-specific area
++ RFC  793 = TCP
++ RFC 1072 = TCP SACKs (selective acknowledgments)
++ RFC 1323 = TCP additional TCP options
+    + tcp-option-window-scale
+    + tcp-option-timestamp
++ RFC  896 = TCP Nagle Algorithm
