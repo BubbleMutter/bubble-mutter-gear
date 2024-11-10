@@ -44,7 +44,7 @@ make_linux_image_deb() {
     #   Package: linux-image-$release
     version=6.1.0 # kernel upstream version code
     arch=$(dpkg --print-architecture)
-    release=rain  # custom release code
+    release=rain  # custom release code (snow/storm/wind)
     make KDEB_PKGVERSION=$version KERNELRELEASE=$version-$arch-$release bindeb-pkg -j`nproc`
 }
 

@@ -26,6 +26,8 @@ apt install uuid hexcurse global source-highlight pyflakes3
 # development gui tools
 apt install kdiff3-qt doxygen-gui cmake-qt-gui ghex
 apt install cppman zeal manpages-posix-dev susv2 susv3
+# android development
+apt install android-sdk-libsparse-utils # simg2img, img2simg
 # network toolbox
 apt install proxychains4 redsocks v2ray
 apt install mtr atop dstat tcpdump wireshark-gtk

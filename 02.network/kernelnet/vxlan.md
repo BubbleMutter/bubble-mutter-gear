@@ -1,35 +1,48 @@
 [TOC]
 # vxlan
 + features:
-    1. 在跨三层网络中, 组建形同 vlan 的内网, 俗称三层的VLAN, 又称 overlay 网络
-    2. vxlan节点 间通过 udp 包裹传输主机的原始报文
+    + 在跨三层网络中, 组建形同 vlan 的内网, 俗称三层的VLAN, 又称 overlay 网络
+    + vxlan节点 间通过 udp 包裹传输主机的原始报文
 + vxlan header =
     + VNI (vxlan identify) = 形同 vlanid, size = 16M
-+ vxlan packet = `phy-mac | phy-ip | vxlan-udp | vxlan-mac | vxlan-ip | l4-payload`
-    + `outer_dmac = phy-gateway, outer_smac = local-phy`
-    + `outer_dip = remote-phy, outer_smac = local-phy`
-    + `inner_dmac = remote-vxlan, inner_smac = local-vxlan`
-    + `inner_dip = remote-vxlan, inner_sip = local-vxlan`
++ vxlan packet = `phy-mac | phy-ip | vxlan-udp | inner-mac | inner-ip | l4-payload`
+    + `outer_dmac = phy-gateway`,  `outer_smac = local-phy`
+    + `outer_dip = remote-vxlan`, `outer_sip = local-vxlan`
 + VTEP(Vxlan Tunnel Endpoint) = vtepip 指 vxlan 的 phy 网卡的 ip
 
-# linux vxlan route mechanism
+# linux vxlan tx looking route mechanism
 ```sh
 # 1. lookup inner_sip, inner_smac via inner_dip, and out interface is vxlan
-ip route get $inner_dip | grep "dev vxlan"
+ip route get $inner_di dev dev vxlan
 # 2. lookup inner_dmac via inner_dip
-ip neigh add $inner_dip dev vxlan lladdr $inner_dmac nud permanent
+ip neigh show to $inner_dip dev vxlan
 # 3. lookup outer_dip via inner_dmac
-bridge fdb append $inner_dmac dev vxlan dst $outer_dip
+bridge fdb get $inner_dmac self dev vxlan
 # 4. lookup outer_sip, outer_smac via outer_dip, and out interface is phy of vxlan
-ip route get $outer_dip | grep $phy
+ip route get $outer_dip dev $phy
 # 5. lookup outer_dmac via outer_dip
-ip neigh | grep $outer_dip
+ip neigh show to $outer_dip dev $phy
 ```
 1. route to vxlan needs 5 step: inner_route / inner_neigh / fdb / outer_route / outer_neigh
-2. a VM is represented by 2 entries
-    + a neigh entry = (key:vm-ip, value:vm-mac)
-    + a fdb entry   = (key:vm-mac, value:vtep-ip)
-3. userspace lookup bridge fdb
+2. an remote virtual machine = (inner_dip, inner_dmac)
+
+# linux vxlan tx setting route example
+```sh
+fakert_ip=1.1.1.1
+fakert_gw=1.1.1.0
+
+ip link add vxlan type vxlan id $vni dev $phy local $inner_ip dstport 4789 nolearning
+ip addr add $fakert_ip/31 dev vxlan
+ip link set up vxlan
+
+ip route add $inner_dip via $fakert_gw dev vxlan
+ip neigh add $fakert_gw dev vxlan lladdr $inner_dmac nud permanent
+bridge fdb add $inner_dmac dev vxlan dst $outer_dip
+ip route add $outer_dip via $phy_gw dev $phy
+ip neigh add $phy_gw dev $phy lladdr $outer_dmac nud permanent
+```
+
+# netlink filter vxlan bridge programming tips
 ```c++
 socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
 bind(sockfd, sockaddr_nl.nl_groups |= RTMGRP_NEIGH);

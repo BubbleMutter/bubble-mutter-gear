@@ -17,6 +17,7 @@ https://www.cnblogs.com/alifpga/p/7675850.html (后半部分)
 # 7. systcl 调参
 
 # 8. implement framework
+[review](https://wiki.aalto.fi/download/attachments/70789052/linux-tcp-review.pdf)
 `tcp.c` = things between userspace and kernelspace
 `tcp_input.c` =
 `tcp_output.c` =
