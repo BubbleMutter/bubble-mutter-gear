@@ -29,6 +29,22 @@ chapter 17: device and module
 不看:
 chapter 18 ~ chapter 20: bullish
 
+# Linux Driver Development E3
+http://lwn.net/Kernel/LDD3/
+http://lwn.net/images/pdf/LDD3/ldd3_pdf.tar.bz2
+
++ A device driver is providing mechanism, not policy.
++ Most programming problems can be splited into two parts:
+    1. what capabilities are to be provided (mechanism)
+    2. how capabilities can be used (policy)
+
++ Linux driver developers should pay particular attention to this fundamental concept:
+    + write kernel code to access the hardware
+    + but don't force particular policies on the user.
+    + Trade-off between the desire to present the user with as many options as possible</br>
+      and the time you have to write the driver
+    + Being policy-free is actually a common target for software designers.
+
 # Development Tips
 ## source directory
 | directory | description |

@@ -1,7 +1,3 @@
-[TOC]
-# rpm
-# yum install dkms issue
-```sh
 #!/bin/bash
 # install epel-release at first
 yum install --enablerepo=extras epel-release
@@ -26,4 +22,3 @@ rpm2cpio $package | cpio -idmv
 # download source
 yum install yum-utils rpm-build
 yumdownloader --source redis
-```

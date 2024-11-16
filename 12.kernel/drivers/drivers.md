@@ -6,7 +6,7 @@
 2. When a device is unregistered ?
     1. unloading a deivce drivers: rmmod
     2. callback when a hot-pluggable device remove
-\=]
+
 # character
 ## open close write read 回调
 open  回调中 处理错误(如互斥化操作) 和初始化设备

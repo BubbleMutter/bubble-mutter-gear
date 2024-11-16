@@ -22,7 +22,9 @@ update-grub2
 # -----------------------------------
 
 # docker repo
-echo 'deb [signed-by=/etc/apt/keyrings/docker.gpg] http://mirrors.ustc.edu.cn/docker-ce/linux/debian buster stable' > /etc/apt/sources.list.d/docker.list
+cat > /etc/apt/sources.list.d/docker.list <<EOF
+deb [signed-by=/etc/apt/keyrings/docker.gpg] http://mirrors.ustc.edu.cn/docker-ce/linux/debian buster stable
+EOF
 
 # apt remain conf
 apt -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install $package
@@ -51,10 +53,20 @@ make_linux_image_deb() {
 modify_deb() {
     # extract with metadata
     dpkg-deb -R ./$package_$version.deb ./$package/
-
     # archive with metadata
     fakeroot dpkg-deb -Zgzip -b $package .
+}
 
+apt_purge() {
+    # apt purge
+    for d in $(dpkg -l | awk '/^rc/{print $2}'); do sudo apt remove --purge -y $d; done
+
+    # apt trace all out-of-repo package
+    for d in $(dpkg -l | awk '/^ii/{print $2}'); do
+        if apt-cache policy $d | sed -n '/ \*\*\* /{N;p}' | grep -qw /var/lib/dpkg/status; then
+            echo $d
+        fi
+    done
 }
 
 # brief show package version
