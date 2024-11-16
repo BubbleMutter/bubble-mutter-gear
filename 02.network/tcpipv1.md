@@ -337,4 +337,3 @@ traceroute -g: ip source routing option
 + tcp-option-timestamp-option:
     + sender places 32bits timestamps value
     + receiver echo back this timestamps value in ACK
-+

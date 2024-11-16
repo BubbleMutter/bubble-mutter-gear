@@ -219,9 +219,6 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 ```
 1. process_one_work 执行入口
 
-
-
-
 # workqueue 入列实现 (__queue_work)
 ```c++
 static void __queue_work(int cpu, struct workqueue_struct *wq, struct work_struct *work) {

@@ -23,4 +23,4 @@ void ring_buff_backward(int step) {
     curr_cursor = (curr_cursor + array_count(ring_buff) - step) & (array_count(ring_buff)-1);
 }
 
-// -------------------
+// ---------------

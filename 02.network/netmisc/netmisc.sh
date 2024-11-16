@@ -31,13 +31,9 @@ bandwidth() {
     trickle -u 1024 -d 1024 scp xx@xx
 }
 
-# proxy for one process
-curl https://checkip.awsclouud.com
-
 # hping3 is to build packet via command line
 # send tcp with dip=127.0.0.1 dport=23 syn payload=100bytes
 hping3 127.0.0.1 --destport 23 --syn --data 100 --count 1
-
 
 ntpme() {
     timedatectl list-timezones
@@ -50,11 +46,8 @@ ntpme() {
 }
 
 # subnet calculate
-get_ipv4() { ip -4 -br addr show scope global dev $1 | awk '{print $3}'; }
-get_ipv6() { ip -6 -br addr show scope global dev $1 | awk '{print $3}'; }
-get_gw1() { python2 -c "import ipcalc; print(ipcalc.Network(ipcalc.IP('$1')).host_first().to_compressed())"; }
-get_gw2() { python2 -c "import ipcalc; print(ipcalc.Network(ipcalc.IP('$1')).network().to_compressed())"; }
-echo "wlan0 gateway is $(get_gw1 $(get_ipv4 wlan0))"
+ip -4 -br addr show scope 0 dev $1 | awk '{print $NF}'
+ip -6 -br addr show scope 0 dev $1 | awk '{print $NF}'
 
 ps --no-headers -wwf -p$(pidof nginx)
 ps --no-headers -wwf -p$(pidof iperf)
@@ -79,3 +72,19 @@ fix_ifname() {
 fix_ifname eth0
 
 ruby -run -ehttpd /path/to/directory -p8000
+
+ethtool_memo() {
+    ethtool -g $dev
+    ethtool -G $dev rx $queue_depth # 上调收包队列深度
+    ethtool -G $dev tx $queue_depth # 上调发包队列深度; 一般调整意义不大, 因为上面有tc qdisc
+
+    ethtool -l $dev
+    ethtool -L $dev rx $number
+    ethtool -L $dev tx $number
+    ethtool -L $dev combined $number
+    # overview information
+    ethtool $dev
+    # check using driver and firmware
+    ethtoo -i $dev
+}
+

@@ -41,9 +41,9 @@ git_diff_tips() {
     git show $hash^ $hash -- $file
 
     # `rollback` a single file
-    git checkout "<hash code>"  "<path/to/file>"
+    git checkout $hash -- $file
     # `rollback` the whole project
-    git reset --hard "<hash code>"
+    git reset --hard $hash
 
     # show commits in pretty way
     alias gitpeak='git log --pretty=format:"%C(yellow)%h %C(white)%s %Cred%d %C(green)[%aN] %Cblue%aD"'
@@ -65,6 +65,11 @@ git rebase master
 git rebase --continue
 git rebase --abort
 
-
 # firsh add remote
 git remote add origin $url && git push -u origin master
+
+# clone particular version of kernel
+git clone -b linux-5.15.y --single-branch http://mirrors.ustc.edu.cn/linux.git
+
+git rev-parse --short HEAD
+git rev-parse --abbrev-ref HEAD

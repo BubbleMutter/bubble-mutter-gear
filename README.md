@@ -7,8 +7,7 @@
 + Computer Network (choose one)
     + Computer Networking (A Top-Down Approach)
     + Computer Network (A System Approach)
-+ System Programming
-    + [ ] Linux System Programming
++ System Programming (choose one)
     + [ ] Advanced Programming on Unix Environment
     + [ ] The Linux Programming Interface
 + Network Programming

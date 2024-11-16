@@ -1,11 +1,13 @@
 [TOC]
-# cross holes
-
-# provider
+# over gate
+# cloud server provider tips
 + vultr: never work any more.
-+ bandwagom: more and more ip get banned
 + digital ocean: create and destroy until you figure out a working one
+    + easily ban your account
++ bandwagom: more and more ip get banned
+    + unable to delete account (Canadian Laws)
 + hostwinds: pay methods are frustrating
++ aws cloud:
 
 # caddy vmess tls wss cdn
 1. caddy
@@ -134,7 +136,6 @@ $domain {
 ```
 4. DNS Provider
     1. Modify dns server list, add cloudflare
-
 5. cloudflare
     1. Set Ssl Mode = Full
     2. Add DNS Record = root and www

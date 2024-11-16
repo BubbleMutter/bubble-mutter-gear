@@ -7,7 +7,7 @@ chmod_common() {
 	inode_lock(path->dentry->d_inode); // 对应日志中 lock(&ovl_i_mutex_key[depth]);
 	    ^*------------------- 加锁点2
 	notify_change(path->dentry) {
-		inode->i_op->setattr(dentry, attr); 
+		inode->i_op->setattr(dentry, attr);
 		ovl_setattr(dentry, attr); {
 			ovl_want_write(dentry);  // sb_start_write(m->mnt_sb);
 			^*------------------- 加锁点3
@@ -15,7 +15,7 @@ chmod_common() {
 			^*------------------- 加锁点4
 			inode_unlock(upperdentry->d_inode);
 			ovl_drop_write(dentry); // sb_stop_write(m->mnt_sb);
-		}		
+		}
 	}
 	inode_unlock(inode);
 	mnt_drop_write(path->mnt); // sb_stop_write(m->mnt_sb);
@@ -32,7 +32,7 @@ SYSCALL_DEFINE3(fchown, unsigned int, fd, uid_t, user, gid_t, group) {
 		inode_lock(inode); // down_write(&inode->i_rwsem);
 		      ^*----------------- 加锁点2 // 拿不到锁, 日志中的 CPU0: lock(&ovl_i_mutex_key[depth]);
 		notify_change(path->dentry) {
-			inode->i_op->setattr(dentry, attr); 
+			inode->i_op->setattr(dentry, attr);
 			ovl_setattr(dentry, attr); {
 				ovl_want_write(dentry);  // sb_start_write(m->mnt_sb);
 				^*------------------- 加锁点3
@@ -40,7 +40,7 @@ SYSCALL_DEFINE3(fchown, unsigned int, fd, uid_t, user, gid_t, group) {
 				^*------------------- 加锁点4
 				inode_unlock(upperdentry->d_inode);
 				ovl_drop_write(dentry); // sb_stop_write(m->mnt_sb);
-			}		
+			}
 		}
 	}
 	mnt_drop_write_file_path(f.file) // sb_start_write(file_inode(file)->i_sb);
