@@ -21,3 +21,5 @@ sed -e '1i\content'
 # limitation1: ( ( ) ） nest
 # limitation2: (" ; occurs inside ")
 nl 1.c | sed -n '/printf/{:T1 /printf(.*);$/bT2 N;bT1 :T2 p}'
+
+# extract tags block

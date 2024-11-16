@@ -18,7 +18,7 @@ bandwidth() {
     # monitor netcard traffic
     dstat -N eth0,total
 
-    # monitor process traffic
+    # monitor process bandwidth
     nethogs
 
     # restrict wlan0 download 1024KB/s, upload 64KB/s
@@ -46,8 +46,8 @@ ntpme() {
 }
 
 # subnet calculate
-ip -4 -br addr show scope 0 dev $1 | awk '{print $NF}'
-ip -6 -br addr show scope 0 dev $1 | awk '{print $NF}'
+ip -4 -br addr show scope 0 dev eth0 | awk '{print $NF}'
+ip -6 -br addr show scope 0 dev eth0 | awk '{print $NF}'
 
 ps --no-headers -wwf -p$(pidof nginx)
 ps --no-headers -wwf -p$(pidof iperf)
@@ -88,3 +88,14 @@ ethtool_memo() {
     ethtoo -i $dev
 }
 
+tcping() {
+    apt install tcptraceroute
+    wget http://www.vdberg.org/~richard/tcpping
+    chmod a+x tcpping
+    tcpping 127.0.0.1 22
+}
+
+
+traceroute -m10 $dip
+traceroute -m10 --udp $dip
+traceroute -m10 --tcp $dip

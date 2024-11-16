@@ -20,7 +20,6 @@ ntfslabel $label /dev/xxx # change ntfs fs volume label
 e2label   $label /dev/xxx # change ext2/3/4 fs volume label
 swaplabel $label /dev/xxx
 
-
 # 文件合并
 dd if=i.img of=o.img oflag=append conv=notrunc
 # construct file with content

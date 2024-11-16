@@ -1,8 +1,7 @@
 #!/bin/bash
-
+# string comparation
 if [ -z $s ]; then echo empty; fi
 if [ -n $s ]; then echo not empty; fi
-
 if [ $s1  = $s2 ]; then echo equal; fi
 if [ $s1 != $s3 ]; then echo not equal; fi
 
@@ -35,3 +34,6 @@ printf %x 15          # oct to hex (suggested)
 # row    <= 3 will not be sorted
 # column == 4 will be sorted
 awk 'NR<=3 {print;next} {print | "sort -k4" }'
+
+# matrix transform
+cat /proc/net/snmp  | sed -n '/^Ip:/p' | rs -T
