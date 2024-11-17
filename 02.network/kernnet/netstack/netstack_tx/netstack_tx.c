@@ -1,5 +1,3 @@
-// syscall > inet > udp > ip > driver-compact > driver
-
 // 发包调用链 系统调用
 SYSCALL_DEFINE5(sendmsg) { 调用__sys_sendmsg }
 __sys_sendmsg            { 根据fd找socket, 调用___sys_sendmsg发包 }
@@ -10,13 +8,13 @@ __sock_sendmsg           { security_socket_sendmsg, __sock_sendmsg_nosec }
 __sock_sendmsg_nosec     { sock->ops->sendmsg }
 inet_sendmsg             { inet_autobind内核层必须bind, sk->sk_prot->sendmsg }
 
-// 发包调用链 udp
-udp_sendmsg              { } // TODO: 重点关注       
+// tx layer4
+udp_sendmsg              { } // TODO: 重点关注
 ip_route_output_flow
 ip_make_skb              { } // TODO: 重点关注
 udp_send_skb
 
-// 发包调用链 网络层
+// tx layer3
 ip_send_skb
 ip_local_out
 ip_local_out_sk
@@ -24,10 +22,10 @@ __ip_local_out
 dst_output_sk
 ip_output               NF_HOOK_COND(NFPROTO_IPV4, NF_INET_POST_ROUTING, ip_finish_output);
 ip_finish_output        { return ip_finish_output2(net, sk, skb); }
-ip_finish_output2
+ip_finish_output2       { neigh_output }
 
-// 发包调用链 驱动适配
-dst_neigh_output
+// tx layer2
+neigh_output
 dev_queue_xmit
 __dev_queue_xmit
 __dev_xmit_skb

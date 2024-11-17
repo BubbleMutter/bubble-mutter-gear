@@ -1,6 +1,6 @@
 // 主要源码 ip_input.c，ip_forward.c，ip_output.c，ip_fragment.c, route.c
 
-int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, struct net_device *orig_dev) { 
+int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, struct net_device *orig_dev) {
     // PACKET_OTHERHOST 非本机, drop
     // pkt_type 在 eth_type_trans 函数中处理
 	if (skb->pkt_type == PACKET_OTHERHOST)
@@ -28,7 +28,7 @@ int ip_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, 
 		goto drop;
 	} else if (len < (iph->ihl*4)) // total长度 < header长度, 则IP报文错误
 		goto inhdr_error;
-        
+
     // 本质操作: 设置skb->len, skb->tail
     // skb->len = len;
 	// skb->tail = skb->data + len;
@@ -83,7 +83,7 @@ int ip_route_input_noref(struct sk_buff *skb, __be32 daddr, __be32 saddr,
     return res;
 }
 
-// 
+//
 // 业务输出: 6种结果 { local_input brd_input no_route martian_source martian_destination forward }
 //           martian_source martian_destination RFC1812 非法地址报文要要求统计
 //           no_route  本质同于 local_input
@@ -96,7 +96,7 @@ static int ip_route_input_slow(struct sk_buff *skb, __be32 daddr, __be32 saddr,
 {
     struct fib_result res;
     struct flowi4	fl4;
-    
+
     // 1. 转发预处理: 即可fib_lookup无法处理的
     // multicast 指 0xe(1110) 开头的ip地址
     // lbcast    指 255.255.255.255 开头的ip地址
@@ -115,10 +115,10 @@ static int ip_route_input_slow(struct sk_buff *skb, __be32 daddr, __be32 saddr,
 		if (!IN_DEV_NET_ROUTE_LOCALNET(in_dev, net))
 			goto martian_source;
 	}
-    
+
     // 2. 查询转发表, 输出结果存储到res变量
     fib_lookup(net, &fl4, &res);
-    
+
     // 3. 根据转发结果 分发处理逻辑
     if (res.type == RTN_BROADCAST)
 		goto brd_input;
@@ -174,9 +174,9 @@ local_input:
 		rth->dst.error= -err;
 		rth->rt_flags 	&= ~RTCF_LOCAL;
 	}
-    
+
     // ... route cache logic
-	
+
     skb_dst_set(skb, &rth->dst);
 	err = 0;
 	goto out;
@@ -215,7 +215,7 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 
 		ipprot = rcu_dereference(inet_protos[protocol]); // 获取传输层回调
 		if (ipprot != NULL) {
-            // ... xfrm4_policy_check 
+            // ... xfrm4_policy_check
 			ret = ipprot->handler(skb);
 			if (ret < 0) {
 				protocol = -ret;
@@ -236,5 +236,5 @@ static int ip_local_deliver_finish(struct sk_buff *skb)
 				consume_skb(skb);
 			}
 		}
-	}   
+	}
 }

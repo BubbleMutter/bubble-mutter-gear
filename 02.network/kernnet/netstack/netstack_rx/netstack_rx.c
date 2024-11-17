@@ -1,12 +1,11 @@
-// driver-layer > ... > sock_queue > ... > user-layer
-// 驱动例子 drivers/net/ethernet/realtek
-
 // 收包调用链1, driver > ip
 rtl8139_rx                { 驱动中断收包, backlog逻辑调用或直接调用netif_receive_skb }
 eth_type_trans            { Link层 统一接口, 在驱动代码中调用, 剥掉link层 }
 netif_receive_skb         驱动适配 统一的收包函数
 __netif_receive_skb_core  驱动适配 收包实际处理函数 // TODO: 重点关注 特别是处理VLAN的部分
 deliver_skb               link层到ip层
+
+// rx layer3
 pt_prev->func             已注册的ip层回调 如 { ip_packet_type, arp_packet_type }
 ip_rcv                    { 检查校验码, 检查header长度, NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING) }
 ip_rcv_finish             { early_demux, ip_route_input_noref, ip_rcv_options, st_input(skb)  }
@@ -15,7 +14,7 @@ ip_route_input_slow       非组播包处理逻辑          // TODO: 重点关�
 ip_local_deliver          ip协议相关逻辑 组包 分包
 ip_local_deliver_finish   { 剥掉sk_buff的网络层, 处理raw_socket逻辑, 调用传输层回调net_protocol->handler }
 
-// 收包调用链2(udp例子), 传输层 > sock_queue
+// rx layer3 (udp)
 udp_rcv                   { 直接调用__udp4_lib_rcv(IPPROTO_UDP) }
 __udp4_lib_rcv            { 获取NF_HOOK塞进来的socket, udp组播逻辑, 根据src-port&dst-port查表获取socket }
 udp_queue_rcv_skb         { backlog逻辑调用或直接调用__udp_queue_rcv_skb  }
@@ -23,7 +22,7 @@ __udp_queue_rcv_skb       { 几乎直接调用 sock_queue_rcv_skb }
 sock_queue_rcv_skb        { 执行BPF过滤器 }
 __sock_queue_rcv_skb      { 压入队列__skb_queue_tail(sk->sk_receive_queue) }
 
-// 收包调用链3,  syscall > inet_recvmsg
+// rx syscall
 SYSCALL_DEFINE3(recvmsg)  { __sys_recvmmsg }
 __sys_recvmsg             { 根据fd获取socket, ___sys_recvmsg }
 ___sys_recvmsg            { 获取用户态msghdr, 分配足够多的iovec, 切到内核态, 收包, 切回用户态 } // TODO: 重点关注
