@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+import sys
+import socket
+
+# Print all the ip part of a given ip/mask
+#
+# Usage: ippart 192.168.100.30/26
+#
+# Output: 192.168.100.XXX, 192.168.100.XXX, ...
+
+if len(sys.argv) == 1: exit(1)
+part = sys.argv[1].split('/')
+inet = 0
+try:
+    baddr = socket.inet_pton(socket.AF_INET, part[0])
+    inet  = socket.AF_INET
+except socket.error:
+    pass
+
+try:
+    baddr = socket.inet_pton(socket.AF_INET6, part[0])
+    inet  = socket.AF_INET6
+except socket.error:
+    pass
+
+if inet == 0: exit(1)
+
+bsize = len(baddr)*8
+width = int(part[1]) if len(part) > 1 else bsize
+width = bsize if width > bsize else width
+
+count = 2**(bsize-width) - 1
+bmask = count.to_bytes(len(baddr), 'big')
+bcast = bytes([baddr[i]|bmask[i] for i in range(len(baddr))])
+icast = int.from_bytes(bcast,'big')
+bstep = [(icast-i).to_bytes(len(baddr), 'big') for i in range(count+1)]
+for ip in bstep: print(socket.inet_ntop(inet, ip))

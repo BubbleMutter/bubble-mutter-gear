@@ -61,7 +61,7 @@ apt_purge() {
     # apt purge
     for d in $(dpkg -l | awk '/^rc/{print $2}'); do sudo apt remove --purge -y $d; done
 
-    # apt trace all out-of-repo package
+    # list packages out-of-repo
     for d in $(dpkg -l | awk '/^ii/{print $2}'); do
         if apt-cache policy $d | sed -n '/ \*\*\* /{N;p}' | grep -qw /var/lib/dpkg/status; then
             echo $d
@@ -69,5 +69,20 @@ apt_purge() {
     done
 }
 
-# brief show package version
+dpkg_memo() {
+    # show package files
+    dpkg -c egg.deb # via package filename
+    dpkg -L package # via installed packname
+
+    # extract content file
+    dpkg -x egg.deb $target/
+    # extract metadata file
+    dpkg -e egg.deb $target/
+}
+
+# list deb's version
 for d in $(find . -name *.deb); do dpkg -f $d Package Version | cut -d: -f2 | sed 'N;s|\n | |'; done
+
+# --fix-broken issue solution
+sudo dpkg --configure --force-overwrite -a
+sudo apt -o Dpkg::Options::="--force-overwrite" --fix-broken install

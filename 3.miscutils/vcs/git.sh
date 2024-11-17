@@ -18,9 +18,19 @@ git_config() {
     git config --global --unset https.proxy  # disable
 }
 
+git_simple() {
+    git clone "https://your/url/to/git/repo"
+    git pull  # `update` your local-repo
+    git pull  --allow-unrelated-histories # 远程有别人push了，导致本地push不成功
+    git add $f              # `add` your change to the local-repo.
+    git commit -m "message" # `record` your commit for your new changing.
+    git push                # `update` your local-disk change to the remote-repo.
+}
+
 git_branch() {
-    git checkout $branch    # switch branch
-    git branch # show current branch
+    git checkout $branch      # switch branch
+    git branch 
+    git branch --show-current # show current branch
     git branch --delete $branch
     git branch --remotes --delete origin/$branch # discard un-push commits
     git push origin --delete $branch             # delete remote branch
@@ -46,19 +56,20 @@ git_diff_tips() {
     git reset --hard $hash
 
     # show commits in pretty way
-    alias gitpeak='git log --pretty=format:"%C(yellow)%h %C(white)%s %Cred%d %C(green)[%aN] %Cblue%aD"'
-    gitpeak
+    alias gitlog='git log --pretty=format:"%C(yellow)%h %C(white)%s %Cred%d %C(green)[%aN] %Cblue%aD"'
 
     # show uncommited changes in pretty way
     git status -s # 形同 svn status
 }
 
-git clone "https://your/url/to/git/repo"
-git pull  # `update` your local-repo
-git pull  --allow-unrelated-histories # 远程有别人push了，导致本地push不成功
-git add $f              # `add` your change to the local-repo.
-git commit -m "message" # `record` your commit for your new changing.
-git push                # `update` your local-disk change to the remote-repo.
+git_reset() {
+    git reset --hard
+    git clean --xfd
+    git pull
+    git submodule foreach reset --hard
+    git submodule foreach clean --xfd
+    git submodule foreach update
+}
 
 # rebase
 git rebase master
@@ -66,7 +77,8 @@ git rebase --continue
 git rebase --abort
 
 # firsh add remote
-git remote add origin $url && git push -u origin master
+git remote add origin $url
+git push -u origin master
 
 # clone particular version of kernel
 git clone -b linux-5.15.y --single-branch http://mirrors.ustc.edu.cn/linux.git
